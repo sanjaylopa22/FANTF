@@ -37,7 +37,7 @@ bash ./scripts/classification/PatchTSTfuzzy.sh
 
 ## Citation
 
-```
+Chakraborty, S., & Heintz, F. (2025). Enhancing Time Series Forecasting with Fuzzy Attention-Integrated Transformers. arXiv preprint arXiv:2504.00070.
 
 ## Contact
 If you have any questions or suggestions, feel free to contact our maintenance team:
@@ -46,4 +46,9 @@ Current:
 - Sanjay Chakraborty (Postdoc, sanjay.chakraborty@liu.se)
 
 Or describe it in Issues.
+
+## Contributors
+
+If you have any questions or want to use the code, feel free to contact:
+* Sanjay Chakraborty (Sanjay.chakraborty@liu.se)
 
