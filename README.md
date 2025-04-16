@@ -47,8 +47,3 @@ Current:
 
 Or describe it in Issues.
 
-## Contributors
-
-If you have any questions or want to use the code, feel free to contact:
-* Sanjay Chakraborty (Sanjay.chakraborty@liu.se)
-
