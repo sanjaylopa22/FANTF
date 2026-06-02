@@ -48,42 +48,62 @@ class DSAttention(nn.Module):
 
 
 class FuzzyAttention(nn.Module):
-    def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False, delta=0.5):
+    def __init__(self, mask_flag=True, factor=5, scale=None,
+                 attention_dropout=0.1, output_attention=False,
+                 delta=0.5, freeze_fuzziness=False):  # <-- only change
         super(FuzzyAttention, self).__init__()
-        self.scale = scale
-        self.mask_flag = mask_flag
+        self.scale            = scale
+        self.mask_flag        = mask_flag
         self.output_attention = output_attention
-        self.dropout = nn.Dropout(attention_dropout)
-        self.delta = delta  # Fuzziness factor
+        self.dropout          = nn.Dropout(attention_dropout)
+        self.delta            = delta
 
-    def forward(self, queries, keys, values, attn_mask, tau=None, delta=None):
-        """
-        Forward pass for the Fuzzy Attention network (FAN).
-        """
-        # Default delta value if not provided
-        delta = delta or self.delta
-        
+        # freeze_fuzziness=False (default) → learned parameter
+        #   used in all normal training and evaluation runs
+        #   your existing models are completely unaffected
+        #
+        # freeze_fuzziness=True → fixed buffer frozen at 1.0
+        #   used only in sensitivity analysis scripts
+        #   ensures delta is the sole variable being tested
+        if freeze_fuzziness:
+            self.register_buffer(
+                'fuzziness_param', torch.tensor(1.0))
+        else:
+            self.fuzziness_param = nn.Parameter(
+                torch.tensor(1.0))
+
+    def forward(self, queries, keys, values,
+                attn_mask, tau=None, delta=None):
+        # Use init delta if not overridden
+        delta       = delta or self.delta
         B, L, H, E = queries.shape
-        _, S, _, D = values.shape
-        scale = self.scale or 1. / sqrt(E)
-        
-        # Compute attention scores
-        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
+        _, S, _, D  = values.shape
+        scale       = self.scale or 1. / sqrt(E)
+
+        # Standard scaled dot-product attention scores
+        scores = torch.einsum(
+            "blhe,bshe->bhls", queries, keys)
 
         if self.mask_flag:
             if attn_mask is None:
-                attn_mask = TriangularCausalMask(B, L, device=queries.device)
+                attn_mask = TriangularCausalMask(
+                    B, L, device=queries.device)
             scores.masked_fill_(attn_mask.mask, -np.inf)
-        
-        # Learnable fuzziness
-        self.fuzziness_param = nn.Parameter(torch.tensor(1.0))
-        fuzziness = delta * self.fuzziness_param * torch.randn_like(scores)
+
+        # Fuzzy perturbation
+        # tilde_s_ij = s_ij + delta * alpha * N(0,1)
+        # alpha = self.fuzziness_param
+        # delta = fixed scaling hyperparameter
+        fuzziness    = (delta
+                        * self.fuzziness_param
+                        * torch.randn_like(scores))
         fuzzy_scores = scores + fuzziness
 
-        # Apply softmax to the adjusted fuzzy scores
-        A = self.dropout(F.softmax(scale * fuzzy_scores, dim=-1))
+        # Softmax — implicit defuzzification
+        A = self.dropout(
+            F.softmax(scale * fuzzy_scores, dim=-1))
 
-        # Compute the output using the attention weights
+        # Weighted sum over values
         V = torch.einsum("bhls,bshd->blhd", A, values)
 
         if self.output_attention:
