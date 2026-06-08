@@ -4,6 +4,8 @@ FANTF approach integrates fuzzy logic with existing transformer architectures to
 
 We provide a neat code base to evaluate advanced deep time series models or develop your model, which covers five mainstream tasks: **long- and short-term forecasting, anomaly detection, and classification.**
 
+https://arxiv.org/pdf/2504.00070
+
 ## Usage
 
 1. Install Python 3.8. For convenience, execute the following command.
