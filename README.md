@@ -6,6 +6,8 @@ We provide a neat code base to evaluate advanced deep time series models or deve
 
 https://arxiv.org/pdf/2504.00070
 
+FANTF is built directly on top of the Time Series Library (TSLib), an open-source benchmark from Tsinghua University that implements over 40 state-of-the-art models across five time series tasks using a unified codebase. In TSLib, every model including Transformer, Informer, PatchTST, Crossformer, and iTransformer uses the same backbone architecture across all downstream tasks, with only the task-specific output projection head differing per task. FANTF strictly follows this same protocol: the FAN module replaces only the standard attention layer in each backbone, and all task-specific heads are retained exactly as defined in TSLib. This design ensures direct and fair comparability with all TSLib baseline models, full reproducibility of results, and demonstrates that the FAN module provides consistent improvements at the attention level independently of task-specific considerations.
+
 ## Usage
 
 1. Install Python 3.8. For convenience, execute the following command.
